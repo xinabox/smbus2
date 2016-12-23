@@ -33,9 +33,11 @@ except ImportError:
 
 # Required I2C constant definitions repeated
 I2C_SMBUS = 0x0720
+I2C_SMBUS_WRITE = 0
 I2C_SMBUS_READ = 1
 I2C_SMBUS_BYTE_DATA = 2
 I2C_SMBUS_WORD_DATA = 3
+I2C_SMBUS_PROC_CALL = 4
 I2C_SMBUS_BLOCK_DATA = 5  # Can't get this one to work on my Raspberry Pi
 I2C_SMBUS_I2C_BLOCK_DATA = 8
 I2C_SMBUS_BLOCK_MAX = 32
@@ -70,6 +72,10 @@ def mock_ioctl(fd, command, msg):
         elif msg.size == I2C_SMBUS_I2C_BLOCK_DATA:
             for k in range(msg.data.contents.byte):
                 msg.data.contents.block[k+1] = test_buffer[offset+k]
+    elif command == I2C_SMBUS and msg.read_write == I2C_SMBUS_WRITE:
+        if msg.size == I2C_SMBUS_PROC_CALL:
+            msg.data.contents.word += 1
+
 
 # Override open, close and ioctl with our mock functions
 open_mock = mock.patch('smbus2.smbus2.os.open', mock_open)
@@ -117,6 +123,13 @@ class TestSMBus(unittest.TestCase):
 
         bus.close()
 
+    def test_process_call(self):
+        bus = SMBus(1)
+        value = 1024
+        result = bus.process_call(80, 0, value)  # result = value + 1
+        self.assertEqual(result, value+1, msg="Returned value is incorrect")
+        bus.close()
+
 
 class TestSMBusWrapper(unittest.TestCase):
     """Similar test as TestSMBus except it encapsulates it all access within "with" blocks."""
@@ -152,3 +165,9 @@ class TestSMBusWrapper(unittest.TestCase):
             res3.extend(x)
         self.assertEqual(len(res3), n, msg="Result array of incorrect length.")
         self.assertListEqual(res, res3, msg="Byte and block reads differ")
+
+    def test_process_call(self):
+        with SMBusWrapper(1) as bus:
+            value = 1024
+            result = bus.process_call(80, 0, value)  # result = value + 1
+            self.assertEqual(result, value + 1, msg="Returned value is incorrect")

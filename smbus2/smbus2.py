@@ -38,6 +38,7 @@ I2C_SMBUS_READ = 1
 # Size identifiers uapi/linux/i2c.h
 I2C_SMBUS_BYTE_DATA = 2
 I2C_SMBUS_WORD_DATA = 3
+I2C_SMBUS_PROC_CALL = 4
 I2C_SMBUS_BLOCK_DATA = 5  # Can't get this one to work on my Raspberry Pi
 I2C_SMBUS_I2C_BLOCK_DATA = 8
 I2C_SMBUS_BLOCK_MAX = 32
@@ -272,6 +273,23 @@ class SMBus(object):
         msg.data.contents.block[0] = length
         msg.data.contents.block[1:length + 1] = data
         ioctl(self.fd, I2C_SMBUS, msg)
+
+    def process_call(self, i2c_addr, register, value):
+        # type: (int, int, int) -> int
+        """
+        Perform an SMBus process call
+        :param i2c_addr: i2c address
+        :param register: Start register
+        :param value: Word value to transmit
+        :return: Result value (word)
+        """
+        self._set_address(i2c_addr)
+        msg = i2c_smbus_ioctl_data.create(
+            read_write=I2C_SMBUS_WRITE, command=register, size=I2C_SMBUS_PROC_CALL
+        )
+        msg.data.contents.word = value
+        ioctl(self.fd, I2C_SMBUS, msg)
+        return msg.data.contents.word
 
 
 class SMBusWrapper:

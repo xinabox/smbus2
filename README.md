@@ -21,6 +21,7 @@ Currently supported features are:
 * write_word_data
 * read_i2c_block_data
 * write_i2c_block_data
+* process_call
 
 It is developed on Python 2.7 but works without any modifications in Python 3.X too.
 
@@ -79,6 +80,16 @@ It is possible to write 32 bytes at the time, but I have found that error-prone.
         # Write a block of 8 bytes to address 80 from offset 0
         data = [1, 2, 3, 4, 5, 6, 7, 8]
         bus.write_i2c_block_data(80, 0, data)
+
+## Example 5: Process call
+
+Perform an SMBus process call:
+
+    from smbus2 import SMBusWrapper
+    
+    with SMBusWrapper(1) as bus:
+        input_word = 4096
+        result_word = bus.process_call(80, 0, input_word)
 
 # Installation instructions
 
