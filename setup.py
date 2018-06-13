@@ -48,8 +48,7 @@ setup(
         ],
         'qa': [
             'flake8'
-        ],
-        'test': test_deps
+        ]
     },
     classifiers=[
         "Development Status :: 4 - Beta",
