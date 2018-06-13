@@ -1,5 +1,6 @@
 # The MIT License (MIT)
 # Copyright (c) 2017 Karl-Petter Lindegaard
+# test_deps in extras_require removed by Bjarke Gotfredsen. This is not a permanent fix!
 
 import re
 import os
